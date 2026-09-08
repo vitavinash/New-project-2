@@ -6,7 +6,10 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config("SECRET_KEY", default="unsafe-local-development-key")
+SECRET_KEY = config("SECRET_KEY", default="").strip() or (
+    "smarteye-fallback-key-change-this-in-vercel-"
+    "9f5b7b2c4a1d8e6f3c0b7a2e5d9f1c6"
+)
 DEBUG = config("DEBUG", default=True, cast=bool)
 
 # Support Vercel deployment domains, custom domains, and local development
@@ -135,4 +138,3 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
