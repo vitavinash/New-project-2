@@ -1,0 +1,13 @@
+{% extends "website/base.html" %}
+{% block title %}Thank You - SmartEye eQMS{% endblock %}
+{% block content %}
+<main class="thanks">
+  <div class="thanks-card">
+    <span class="success-mark">OK</span>
+    <p class="eyebrow">Request received</p>
+    <h1>Thank you for contacting SmartEye eQMS.</h1>
+    <p>Your inquiry has been saved. The team can review it from the Django admin dashboard.</p>
+    <a class="btn primary" href="{% url 'home' %}">Back to homepage</a>
+  </div>
+</main>
+{% endblock %}
