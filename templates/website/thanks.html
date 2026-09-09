@@ -1,13 +1,7 @@
 {% extends "website/base.html" %}
-{% block title %}Thank You - SmartEye eQMS{% endblock %}
+{% block title %}Request received | SmartEye eQMS{% endblock %}
 {% block content %}
-<main class="thanks">
-  <div class="thanks-card">
-    <span class="success-mark">OK</span>
-    <p class="eyebrow">Request received</p>
-    <h1>Thank you for contacting SmartEye eQMS.</h1>
-    <p>Your inquiry has been saved. The team can review it from the Django admin dashboard.</p>
-    <a class="btn primary" href="{% url 'home' %}">Back to homepage</a>
-  </div>
-</main>
+<main id="main-content" class="thanks-page"><div class="thanks-content">
+  <i data-lucide="circle-check"></i><p class="eyebrow">REQUEST RECEIVED</p><h1>Let's take the next step together.</h1><p>Thank you for your interest in SmartEye. Your inquiry has been received and our team will be in touch using the details you provided.</p><a class="button primary" href="{% url 'home' %}">Back to SmartEye <i data-lucide="arrow-right"></i></a>
+</div></main>
 {% endblock %}

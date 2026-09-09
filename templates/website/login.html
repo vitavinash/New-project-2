@@ -1,0 +1,14 @@
+{% extends "website/base.html" %}
+{% block title %}Sign in | SmartEye eQMS{% endblock %}
+{% block content %}
+<main id="main-content" class="auth-page"><section class="auth-card" aria-labelledby="login-title">
+  <span class="brand-mark"><i data-lucide="scan-eye"></i></span>
+  <p class="eyebrow" style="margin-top:24px">YOUR QUALITY WORKSPACE</p><h1 id="login-title">Good to see you again.</h1><p>Sign in to pick up where you left off.</p>
+  {% if error %}<div class="form-error" role="alert">{{ error }}</div>{% endif %}
+  <form method="post" class="auth-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+    <label for="username">Username</label><input id="username" name="username" value="{{ username }}" type="text" autocomplete="username" required autofocus placeholder="Your username">
+    <label for="password">Password</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Your password"><button type="button" id="show-password" class="icon-button" aria-label="Show password" aria-pressed="false"><i data-lucide="eye"></i></button></div>
+    <button class="button primary" type="submit">Sign in <i data-lucide="arrow-right"></i></button>
+  </form><p class="auth-footnote">Need access? <a href="{% url 'home' %}#contact">Talk to our team</a></p>
+</section></main>
+{% endblock %}

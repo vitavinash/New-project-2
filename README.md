@@ -45,3 +45,17 @@ Open `http://127.0.0.1:8000/`.
 - Functional demo/contact form.
 - Lead storage and search in Django admin.
 - Production-friendly static file setup with WhiteNoise.
+- Responsive visual design with laboratory photography, light/dark themes, and mobile navigation.
+- Searchable sample traceability matrix with record inspection and CSV export.
+- Interactive device-category tabs and time-savings calculator.
+- Personal action workspace with persistent records, priorities, due dates, status updates, filtering, and CSV export.
+
+## Verification
+
+```bash
+python manage.py test website --noinput
+```
+
+Existing installations should run `python manage.py migrate` to add the action-item table. Sign in using an existing Django username and password to access the workspace.
+
+See [PROJECT.md](PROJECT.md) for routes, implementation details, and the distinction between sample traceability data and persisted personal actions.

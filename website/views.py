@@ -1,6 +1,16 @@
-from django.shortcuts import redirect, render
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+import csv
 
-from .forms import LeadForm
+from .forms import ActionItemForm, LeadForm
+from .models import ActionItem
 
 
 def home(request):
@@ -180,3 +190,86 @@ def home(request):
 def thanks(request):
     return render(request, "website/thanks.html")
 
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("workspace")
+    error = None
+    next_url = request.POST.get("next", request.GET.get("next", ""))
+    if not url_has_allowed_host_and_scheme(next_url, {request.get_host()}, require_https=request.is_secure()):
+        next_url = ""
+    if request.method == "POST":
+        user = authenticate(request, username=request.POST.get("username", "").strip(), password=request.POST.get("password", ""))
+        if user is not None:
+            login(request, user)
+            return redirect(next_url or "workspace")
+        error = "The username or password is incorrect."
+    return render(request, "website/login.html", {"error": error, "next": next_url, "username": request.POST.get("username", "")})
+
+
+@require_POST
+def logout_view(request):
+    logout(request)
+    return redirect("home")
+
+
+@login_required(login_url="login")
+def workspace(request):
+    form = ActionItemForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        item = form.save(commit=False)
+        item.owner = request.user
+        item.save()
+        messages.success(request, "Action created.")
+        return redirect("workspace")
+    items = ActionItem.objects.filter(owner=request.user)
+    total = items.count()
+    completed = items.filter(status="done").count()
+    today = timezone.localdate()
+    overdue = items.exclude(status="done").filter(due_date__lt=today).count()
+    query = request.GET.get("q", "").strip()[:160]
+    status = request.GET.get("status", "")
+    priority = request.GET.get("priority", "")
+    filtered = items
+    if query:
+        filtered = filtered.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    if status in dict(ActionItem.STATUSES):
+        filtered = filtered.filter(status=status)
+    else:
+        status = ""
+    if priority in dict(ActionItem.PRIORITIES):
+        filtered = filtered.filter(priority=priority)
+    else:
+        priority = ""
+    if request.GET.get("export") == "csv":
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="smarteye-actions.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["ID", "Title", "Description", "Priority", "Status", "Due date"])
+        for item in filtered:
+            # Neutralize spreadsheet formulas in user-authored cells.
+            cells = [f"ACT-{item.pk:04d}", item.title, item.description, item.get_priority_display(), item.get_status_display(), item.due_date or ""]
+            writer.writerow(["'" + value if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")) else value for value in cells])
+        return response
+    context = {
+        "action_form": form, "items": filtered, "query": query,
+        "selected_status": status, "selected_priority": priority,
+        "statuses": ActionItem.STATUSES, "priorities": ActionItem.PRIORITIES,
+        "total": total, "open_count": total - completed, "completed": completed,
+        "overdue": overdue, "completion": round(completed / total * 100) if total else 0,
+        "today": today,
+    }
+    return render(request, "website/workspace.html", context)
+
+
+@login_required(login_url="login")
+@require_POST
+def update_action(request, pk):
+    item = get_object_or_404(ActionItem, pk=pk, owner=request.user)
+    status = request.POST.get("status")
+    if status not in dict(ActionItem.STATUSES):
+        return HttpResponseBadRequest("Invalid action status.")
+    item.status = status
+    item.save(update_fields=["status", "updated_at"])
+    messages.success(request, "Action status updated.")
+    return redirect("workspace")
